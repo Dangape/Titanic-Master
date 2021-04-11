@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import seaborn as sns
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
 
 #Load data
 data = pd.read_csv("Dados/train.csv")
@@ -21,7 +23,14 @@ dead = data[data['Survived']==0]
 data['Embarked'] = data['Embarked'].replace(['S'],int(0))
 data['Embarked'] = data['Embarked'].replace(['C'],int(1))
 data['Embarked'] = data['Embarked'].replace(['Q'],int(2))
+data['Sex'] = data['Sex'].replace(['male'],int(1))
+data['Sex'] = data['Sex'].replace(['female'],int(0))
 print(data)
+
+#Drop NaN rows
+print("There are", len(data), "rows and",data.isnull().values.ravel().sum(),"rows have missing values")
+data = data.dropna()
+data = data.reset_index(drop=True)
 
 #Visualize data
 # Check for correlations
@@ -69,4 +78,15 @@ fig.tight_layout()
 plt.savefig('Grid_dist.png')
 plt.show()
 
-# print(data.Pclass.unique())
+#Defining features and prediction variable
+
+X,Y = data.iloc[:,1:], data.iloc[:,0]
+print(X.head())
+
+x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7)
+
+#Suport Vector Machine model
+clf = SVC(kernel='linear')
+clf.fit(x_train,y_train)
+y_pred = clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
