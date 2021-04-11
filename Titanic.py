@@ -83,10 +83,42 @@ plt.show()
 X,Y = data.iloc[:,1:], data.iloc[:,0]
 print(X.head())
 
-x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7)
+x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7) #Use 100% as training data to upload results on kaggle
 
 #Suport Vector Machine model
 clf = SVC(kernel='linear')
-clf.fit(x_train,y_train)
-y_pred = clf.predict(x_test)
-print(accuracy_score(y_test,y_pred))
+clf.fit(X,Y) #use x_train and y_train if not submitting the results
+#y_pred = clf.predict(x_test)
+#print(accuracy_score(y_test,y_pred)) #Around 0.8 accuracy with 0.7 training data
+
+#Load test dataset
+data_test = pd.DataFrame(pd.read_csv("Dados/test.csv"))
+
+data_test = data_test.set_index('PassengerId')
+data_test = data_test.drop(columns=['Name','Ticket','Cabin'])
+
+
+#Recode data_test
+data_test['Embarked'] = data_test['Embarked'].replace(['S'],int(0))
+data_test['Embarked'] = data_test['Embarked'].replace(['C'],int(1))
+data_test['Embarked'] = data_test['Embarked'].replace(['Q'],int(2))
+data_test['Sex'] = data_test['Sex'].replace(['male'],int(1))
+data_test['Sex'] = data_test['Sex'].replace(['female'],int(0))
+print("Printing data test:")
+print(data_test)
+
+#Drop NaN rows
+# print("There are", len(data_test), "rows and",data_test.isnull().values.ravel().sum(),"rows have missing values")
+# data_test = data_test.dropna()
+# data_test = data_test.reset_index(drop=True)
+
+
+prediction = clf.predict(data_test)
+print("Printing prediction:")
+print(prediction)
+
+#Generate result file
+submission = pd.DataFrame({"PassengerId":data.index,"Survived":prediction})
+print(submission)
+
+submission.to_csv("submission.csv")
