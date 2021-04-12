@@ -23,7 +23,9 @@ data_test["Age"] = data_test["Age"].fillna(data_test["Age"].mean())
 data_test["Fare"] = data_test["Fare"].fillna(data_test["Fare"].mean())
 
 # load the model from disk
-loaded_model = pickle.load(open('finalized_model_SVM.sav', 'rb'))
+SVM = 'finalized_model_SVM.sav' #Support vector Machine Model
+NBC = 'finalized_model_NBC.sav' #Naive Bayes Classifier Model
+loaded_model = pickle.load(open(NBC, 'rb'))
 
 ## Predict
 prediction = loaded_model.predict(data_test)
