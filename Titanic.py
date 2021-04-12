@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 import seaborn as sns
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
+import pickle
 
 #Load data
 data = pd.read_csv("Dados/train.csv")
@@ -95,40 +96,9 @@ clf.fit(X,Y) #use x_train and y_train if not submitting the results
 #y_pred = clf.predict(x_test)
 #print(accuracy_score(y_test,y_pred)) #Around 0.8 accuracy with 0.7 training data
 
-##Load test dataset
-data_test = pd.DataFrame(pd.read_csv("Dados/test.csv"))
 
-data_test = data_test.set_index('PassengerId')
-data_test = data_test.drop(columns=['Name','Ticket','Cabin'])
+# save the model to disk
+filename = 'finalized_model_SVM.sav'
+pickle.dump(clf, open(filename, 'wb'))
 
 
-#Recode data_test
-data_test['Embarked'] = data_test['Embarked'].replace(['S'],int(0))
-data_test['Embarked'] = data_test['Embarked'].replace(['C'],int(1))
-data_test['Embarked'] = data_test['Embarked'].replace(['Q'],int(2))
-data_test['Sex'] = data_test['Sex'].replace(['male'],int(1))
-data_test['Sex'] = data_test['Sex'].replace(['female'],int(0))
-print("Printing data test:")
-print(data_test)
-
-#Replace NaN values
-print("There are", len(data_test), "rows on test data, and",data_test.isnull().values.ravel().sum(),"rows have missing values")
-
-print(data_test.isna().any()) #Check columns with NaN values
-
-data_test["Age"] = data_test["Age"].fillna(data_test["Age"].mean())
-data_test["Fare"] = data_test["Fare"].fillna(data_test["Fare"].mean())
-
-## Predict
-prediction = clf.predict(data_test)
-print("Printing prediction:")
-print(prediction)
-
-##Generate result file
-submission = pd.DataFrame()
-submission["PassengerId"] = list(range(892,1310))
-submission["Survived"] = prediction
-submission = submission.set_index("PassengerId")
-print(submission)
-
-submission.to_csv("submission.csv")
