@@ -91,8 +91,9 @@ print(X.head())
 x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7) #Use 100% as training data to upload results on kaggle
 
 #Suport Vector Machine model
-clf = SVC(kernel='linear')
+clf = SVC(kernel='rbf')
 clf.fit(X,Y) #use x_train and y_train if not submitting the results
+
 #y_pred = clf.predict(x_test)
 #print(accuracy_score(y_test,y_pred)) #Around 0.8 accuracy with 0.7 training data
 
