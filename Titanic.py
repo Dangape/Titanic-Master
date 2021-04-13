@@ -140,7 +140,7 @@ y_train.to_csv("y_train.csv")
 # x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7) #Use 100% as training data to upload results on kaggle
 
 #Suport Vector Machine model
-clf = SVC(kernel='linear')
+clf = SVC(kernel='rbf')
 clf.fit(X_train,y_train) #use x_train and y_train if not submitting the results
 
 # y_pred = clf.predict(x_test)

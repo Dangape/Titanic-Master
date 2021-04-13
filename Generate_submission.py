@@ -10,7 +10,7 @@ print(test.columns)
 # load the model from disk
 SVM = 'finalized_model_SVM.sav' #Support vector Machine Model
 NBC = 'finalized_model_NBC.sav' #Naive Bayes Classifier Model
-loaded_model = pickle.load(open(SVM, 'rb'))
+loaded_model = pickle.load(open(NBC, 'rb'))
 
 ## Predict
 prediction = loaded_model.predict(test)
