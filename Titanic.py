@@ -9,93 +9,143 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 import pickle
 
-#Load data
-data = pd.read_csv("Dados/train.csv")
-data = pd.DataFrame(data)
-data = data.set_index('PassengerId')
-data = data.drop(columns=['Name','Ticket','Cabin'])
-print(data.head())
+#Load train data
+train = pd.read_csv("Dados/train.csv")
+train = pd.DataFrame(train)
+train = train.set_index('PassengerId')
+train = train.drop(columns=['Ticket','Cabin'])
+print(train.head())
 
-#Subset
-survived = data[data['Survived']==1]
-dead = data[data['Survived']==0]
+#Load test data
+test = pd.read_csv("Dados/test.csv")
+test = pd.DataFrame(test)
+test = test.set_index('PassengerId')
+test = test.drop(columns=['Ticket','Cabin'])
+print(test.head())
 
-#Recode data
-data['Embarked'] = data['Embarked'].replace(['S'],int(0))
-data['Embarked'] = data['Embarked'].replace(['C'],int(1))
-data['Embarked'] = data['Embarked'].replace(['Q'],int(2))
-data['Sex'] = data['Sex'].replace(['male'],int(1))
-data['Sex'] = data['Sex'].replace(['female'],int(0))
-print(data)
+# Convert columns names to lowercase
+train.columns = train.columns.str.lower()
+test.columns = test.columns.str.lower()
 
-#Replace NaN values with mean (not best solution)
-print("There are", len(data), "rows on training data, and",data.isnull().values.ravel().sum(),"rows have missing values")
-
-print(data.isna().any())
-
-data["Age"] = data["Age"].fillna(data["Age"].mean())
-data["Embarked"] = data["Embarked"].fillna(0)
-print("Mean:",data["Age"].mean())
-
-#Visualize data
-# Check for correlations
-corr = data.corr(method = 'pearson')
-plt.figure(figsize=(12,10))
-sns.heatmap(corr, cmap="YlOrRd",vmin=-1., vmax=1., annot=True, fmt='.2f', cbar=True, linewidths=0.8)
-plt.title("Pearson correlation")
-plt.savefig("corr_matrix.png")
-plt.show()
-
-#Fare mean
-print('Survived: ',survived['Fare'].mean())
-print("Dead: ",dead['Fare'].mean())
-
-#Distributions
-fig, axarr = plt.subplots(nrows = 3, ncols = 3,figsize=(12,9))
-fig.subplots_adjust(hspace=0.5)
-fig.suptitle('Features\' Distributions')
+#Check NaN
+print(train.isna().any())
+print(test.isna().any())
 
 
-axarr[0,0].hist(data.iloc[:,0],density = 1, alpha = 0.65)
-axarr[0,0].title.set_text(data.columns[0])
+train["age"] = train["age"].fillna(train["age"].mean()) #mean
+train["embarked"] = train["embarked"].fillna(train["embarked"].mode()[0]) #mode
+test["age"] = test["age"].fillna(test["age"].mean()) #mean
+test["embarked"] = test["embarked"].fillna(test["embarked"].mode()[0]) #mode
+test["fare"] = test["fare"].fillna(test["fare"].mean()) #mean
 
-axarr[0,1].hist(data.iloc[:,1],density = 1, alpha = 0.65)
-axarr[0,1].title.set_text(data.columns[1])
+#Generate dummies on train dataset
+features = ['pclass', 'sex', 'sibsp', 'parch', 'embarked']
+train[features] = train[features].astype('category')
 
-axarr[0,2].hist(data.iloc[:,2],density = 1, alpha = 0.65)
-axarr[0,2].title.set_text(data.columns[2])
+def get_dummies(train,test,columns):
+    df = pd.concat([train[columns], test[columns]])
+    df = pd.get_dummies(df)
+    X_train = df.iloc[:train.shape[0]]
+    X_test = df.iloc[train.shape[0]:]
+    return X_train, X_test
 
-axarr[1,0].hist(data.iloc[:,3],density = 1, alpha = 0.65)
-axarr[1,0].title.set_text(data.columns[3])
+train['pclass'] = train['pclass'].astype('category')
+test['pclass'] = test['pclass'].astype('category')
 
-axarr[1,1].hist(data.iloc[:,4],density = 1, alpha = 0.65)
-axarr[1,1].title.set_text(data.columns[4])
+features = ['pclass', 'sex', 'sibsp', 'parch', 'embarked']
+X_train, X_test = get_dummies(train, test, features)
 
-axarr[1,2].hist(data.iloc[:,5],density = 1, alpha = 0.65)
-axarr[1,2].title.set_text(data.columns[5])
+y_train = train['survived']
+print(type(y_train))
 
-axarr[2,0].hist(data.iloc[:,6],density = 1, alpha = 0.65)
-axarr[2,0].title.set_text(data.columns[6])
+print("After generating dummies:",train)
 
-axarr[2,1].hist(data.iloc[:,7],density = 1, alpha = 0.65)
-axarr[2,1].title.set_text(data.columns[7])
-fig.tight_layout()
-plt.savefig('Grid_dist.png')
-plt.show()
+#Feature Engineering
+titles = train['name'].str.extract(' ([A-Za-z]+)\.', expand=False)
+titles.unique() #Check unique titles
 
-#Defining features and prediction variable
+titles_map = {'Mr': 'Mr', 'Master': 'Master'}
+titles_map.update(dict.fromkeys(['Mrs', 'Ms', 'Mme', 'Ms'], 'Mrs'))
+titles_map.update(dict.fromkeys(['Miss', 'Mlle'], 'Miss'))
+titles_map.update(dict.fromkeys(['Capt', 'Col', 'Major', 'Dr', 'Rev'], 'Officer'))
+titles_map.update(dict.fromkeys(['Jonkheer', 'Don', 'Sir', 'Countess', 'Dona', 'Lady'], 'Royalty'))
 
-X,Y = data.iloc[:,1:], data.iloc[:,0]
-print(X.head())
 
-x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7) #Use 100% as training data to upload results on kaggle
+def extract_title(df):
+    df['title'] = df['name'].str.extract(' ([A-Za-z]+)\.', expand=False).map(titles_map)
+
+extract_title(train)
+extract_title(test)
+
+features = ['pclass', 'sex', 'sibsp', 'parch', 'embarked', 'title']
+X_train, X_test = get_dummies(train, test, features)
+
+print(X_train)
+
+#Save datasets to disk
+X_test.to_csv("x_test.csv")
+X_train.to_csv("x_train.csv")
+y_train.to_csv("y_train.csv")
+
+# #Visualize train
+# # Check for correlations
+# corr = train.corr(method = 'pearson')
+# plt.figure(figsize=(12,10))
+# sns.heatmap(corr, cmap="YlOrRd",vmin=-1., vmax=1., annot=True, fmt='.2f', cbar=True, linewidths=0.8)
+# plt.title("Pearson correlation")
+# plt.savefig("corr_matrix.png")
+# plt.show()
+#
+#
+# #Distributions
+# fig, axarr = plt.subplots(nrows = 3, ncols = 3,figsize=(12,9))
+# fig.subplots_adjust(hspace=0.5)
+# fig.suptitle('Features\' Distributions')
+#
+#
+# axarr[0,0].hist(train.iloc[:,0],density = 1, alpha = 0.65)
+# axarr[0,0].title.set_text(train.columns[0])
+#
+# axarr[0,1].hist(train.iloc[:,1],density = 1, alpha = 0.65)
+# axarr[0,1].title.set_text(train.columns[1])
+#
+# axarr[0,2].hist(train.iloc[:,2],density = 1, alpha = 0.65)
+# axarr[0,2].title.set_text(train.columns[2])
+#
+# axarr[1,0].hist(train.iloc[:,3],density = 1, alpha = 0.65)
+# axarr[1,0].title.set_text(train.columns[3])
+#
+# axarr[1,1].hist(train.iloc[:,4],density = 1, alpha = 0.65)
+# axarr[1,1].title.set_text(train.columns[4])
+#
+# axarr[1,2].hist(train.iloc[:,5],density = 1, alpha = 0.65)
+# axarr[1,2].title.set_text(train.columns[5])
+#
+# axarr[2,0].hist(train.iloc[:,6],density = 1, alpha = 0.65)
+# axarr[2,0].title.set_text(train.columns[6])
+#
+# axarr[2,1].hist(train.iloc[:,7],density = 1, alpha = 0.65)
+# axarr[2,1].title.set_text(train.columns[7])
+# fig.tight_layout()
+# plt.savefig('Grid_dist.png')
+# plt.show()
+#
+# #Defining features and prediction variable
+
+# train = train.drop(columns=['name','sex','sibsp','parch','embarked','title'])
+# train["parch_9"] = np.zeros(len(train))
+# X,Y = train.iloc[:,1:], train.iloc[:,0]
+# print(X.head())
+#
+# x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7) #Use 100% as training data to upload results on kaggle
 
 #Suport Vector Machine model
-clf = SVC(kernel='rbf')
-clf.fit(X,Y) #use x_train and y_train if not submitting the results
+clf = SVC(kernel='linear')
+clf.fit(X_train,y_train) #use x_train and y_train if not submitting the results
 
-#y_pred = clf.predict(x_test)
-#print(accuracy_score(y_test,y_pred)) #Around 0.8 accuracy with 0.7 training data
+# y_pred = clf.predict(x_test)
+# print("Printing accuracy:")
+# print(accuracy_score(y_test,y_pred)) #Around 0.8 accuracy with 0.7 training data
 
 
 # save the model to disk

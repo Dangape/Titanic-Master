@@ -7,46 +7,32 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 import pickle
 
-#Load data
-data = pd.read_csv("Dados/train.csv")
-data = pd.DataFrame(data)
-data = data.set_index('PassengerId')
-data = data.drop(columns=['Name','Ticket','Cabin'])
-print(data.head())
+#Load training data
+x_train = pd.read_csv("x_train.csv")
+x_train = pd.DataFrame(x_train)
+x_train = x_train.set_index('PassengerId')
+print(x_train.head())
 
-#Subset
-survived = data[data['Survived']==1]
-dead = data[data['Survived']==0]
+y_train = pd.read_csv("y_train.csv")
+y_train = pd.DataFrame(y_train)
+y_train = y_train.set_index("PassengerId")
 
-#Recode data
-data['Embarked'] = data['Embarked'].replace(['S'],int(0))
-data['Embarked'] = data['Embarked'].replace(['C'],int(1))
-data['Embarked'] = data['Embarked'].replace(['Q'],int(2))
-data['Sex'] = data['Sex'].replace(['male'],int(1))
-data['Sex'] = data['Sex'].replace(['female'],int(0))
-print(data)
+print(y_train)
 
-#Replace NaN values with mean (not best solution)
-print("There are", len(data), "rows on training data, and",data.isnull().values.ravel().sum(),"rows have missing values")
 
-print(data.isna().any())
+#Load testing data
+x_test = pd.read_csv("x_test.csv")
+x_test = pd.DataFrame(x_test)
+x_test = x_test.set_index('PassengerId')
+print(x_test.head())
 
-data["Age"] = data["Age"].fillna(data["Age"].mean())
-data["Embarked"] = data["Embarked"].fillna(0)
-print("Mean:",data["Age"].mean())
-
-#Defining features and prediction variable
-X,Y = data.iloc[:,1:], data.iloc[:,0]
-print(X.head())
-
-#x_train, x_test, y_train, y_test = train_test_split(X, Y, train_size=0.7) #Use 100% as training data to upload results on kaggle
 
 #Naive Bayes Classifier
 model = GaussianNB()
-model.fit(X,Y)
+model.fit(x_train,y_train.values.ravel())
 
-#ypred = model.predict(x_test)
-#print(accuracy_score(y_test,ypred))
+#ypred = model.predict(x_x_test)
+#print(accuracy_score(y_x_test,ypred))
 
 # save the model to disk
 filename = 'finalized_model_NBC.sav'
