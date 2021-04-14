@@ -31,7 +31,6 @@ test.columns = test.columns.str.lower()
 print(train.isna().any())
 print(test.isna().any())
 
-
 train["age"] = train["age"].fillna(train["age"].mean()) #mean
 train["embarked"] = train["embarked"].fillna(train["embarked"].mode()[0]) #mode
 test["age"] = test["age"].fillna(test["age"].mean()) #mean
