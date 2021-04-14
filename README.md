@@ -6,4 +6,5 @@
 13/04 - 4th submission - 0.77272 (SVM linear with feature engineering)  
 13/04 - 5th submission - 0.77272 (NBC with feature engineering)  
 13/04 - 6th submission - 0.77272 (SVM with feature engineering and RBF kernel)  
+13/04 - 7th submission - 0.76555 (MLP classifier with feature engineering)  
 
