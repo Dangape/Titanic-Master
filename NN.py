@@ -27,57 +27,53 @@ x_test = pd.DataFrame(x_test)
 x_test = x_test.set_index('PassengerId')
 print(x_test.head())
 
-# model = Sequential()
-# model.add(Dense(units = 32, input_shape = (16,), activation = 'relu'))
-# model.add(Dense(units = 64, activation = 'relu', kernel_initializer = 'he_normal', use_bias = False))
-# model.add(tf.keras.layers.BatchNormalization())
-# model.add(Dense(units = 128, activation = 'relu',kernel_initializer = 'he_normal', use_bias = False))
-# model.add(Dropout(0.1))
-# model.add(Dense(units = 64, activation = 'relu',kernel_initializer = 'he_normal', use_bias = False))
-# model.add(Dropout(0.1))
-# model.add(Dense(units = 32, activation = 'relu'))
-# model.add(Dropout(0.15))
-# model.add(Dense(units = 16, activation = 'relu'))
-# model.add(Dense(units = 8, activation = 'relu',kernel_initializer = 'he_normal', use_bias = False))
-# model.add(Dense(units =1 , activation = 'sigmoid'))
-#
-# model.compile(loss = tf.keras.losses.binary_crossentropy, optimizer = tf.keras.optimizers.Adam(), metrics = ['acc'])
-# model.fit(x_train, y_train, batch_size = 32, verbose = 2, epochs = 500)
+model = Sequential()
+model.add(Dense(16, input_dim=16, activation='relu',kernel_initializer='he_normal'))
+model.add(Dense(32, activation='relu',kernel_initializer='he_normal'))
+model.add(Dropout(0.2))
+model.add(Dense(32, activation='relu', kernel_initializer='he_normal'))
+model.add(Dropout(0.2))
+model.add(Dense(32, activation='relu',kernel_initializer='he_normal'))
+model.add(Dense(1, activation='sigmoid'))
+# compile the keras model
+model.compile(loss = tf.keras.losses.binary_crossentropy, optimizer = tf.keras.optimizers.Adam(), metrics = ['acc'])
+model.fit(x_train, y_train, batch_size = 128, epochs = 50)
 
 ####################################
 #Hyper-parameter tuning
 #Deep learning
 #define the keras model
-def create_model(neurons,dropout_rate):
-    model = Sequential()
-    model.add(Dense(16, input_dim=16, activation='relu',kernel_initializer='he_normal'))
-    model.add(Dense(neurons, activation='relu',kernel_initializer='he_normal'))
-    model.add(Dropout(dropout_rate))
-    model.add(Dense(neurons, activation='relu', kernel_initializer='he_normal'))
-    model.add(Dropout(dropout_rate))
-    model.add(Dense(neurons, activation='relu',kernel_initializer='he_normal'))
-    model.add(Dense(1, activation='sigmoid'))
-    # compile the keras model
-    model.compile(loss = tf.keras.losses.binary_crossentropy, optimizer = tf.keras.optimizers.Adam(), metrics = ['acc'])
-    return model
-model = KerasRegressor(build_fn=create_model, verbose=True)
-
-batch_size = [10, 20,32,128]
-epochs = [50, 100, 200]
-neurons = [18,32,64,128]
-dropout_rate = [0.0, 0.1, 0.2, 0.3]
-#activation = ['relu', 'tanh', 'linear']
-#init_mode = ['uniform', 'normal']
-param_grid = dict(batch_size=batch_size, epochs=epochs, neurons = neurons, dropout_rate = dropout_rate)
-grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=-1, cv=3)
-grid_result = grid.fit(x_train, y_train)
-
-print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-means = grid_result.cv_results_['mean_test_score']
-stds = grid_result.cv_results_['std_test_score']
-params = grid_result.cv_results_['params']
-for mean, stdev, param in zip(means, stds, params):
-    print("%f (%f) with: %r" % (mean, stdev, param))
+# def create_model(neurons,dropout_rate):
+#     model = Sequential()
+#     model.add(Dense(16, input_dim=16, activation='relu',kernel_initializer='he_normal'))
+#     model.add(Dense(neurons, activation='relu',kernel_initializer='he_normal'))
+#     model.add(Dropout(dropout_rate))
+#     model.add(Dense(neurons, activation='relu', kernel_initializer='he_normal'))
+#     model.add(Dropout(dropout_rate))
+#     model.add(Dense(neurons, activation='relu',kernel_initializer='he_normal'))
+#     model.add(Dense(1, activation='sigmoid'))
+#     # compile the keras model
+#     model.compile(loss = tf.keras.losses.binary_crossentropy, optimizer = tf.keras.optimizers.Adam(), metrics = ['acc'])
+#     return model
+# model = KerasRegressor(build_fn=create_model, verbose=True)
+#
+# batch_size = [10, 20,32,128]
+# epochs = [50, 100, 200]
+# neurons = [18,32,64,128]
+# dropout_rate = [0.0, 0.1, 0.2, 0.3]
+# #activation = ['relu', 'tanh', 'linear']
+# #init_mode = ['uniform', 'normal']
+# param_grid = dict(batch_size=batch_size, epochs=epochs, neurons = neurons, dropout_rate = dropout_rate)
+# grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=-1, cv=3)
+# grid_result = grid.fit(x_train, y_train)
+#
+# print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+# means = grid_result.cv_results_['mean_test_score']
+# stds = grid_result.cv_results_['std_test_score']
+# params = grid_result.cv_results_['params']
+# for mean, stdev, param in zip(means, stds, params):
+#     print("%f (%f) with: %r" % (mean, stdev, param))
+############################################
 
 # serialize model to JSON
 model_json = model.to_json()
